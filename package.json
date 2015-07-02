@@ -20,6 +20,7 @@
   "devDependencies": {
     "authmaker-common": "^1.0.0",
     "chai": "^3.0.0",
+    "express": "^4.13.0",
     "express-autoroute": "^1.2.1",
     "mocha": "^2.2.5",
     "nconf": "^0.7.1",
