@@ -1,41 +1,16 @@
-var authmakerVerify = rootRequire('./index');
+var authmakerVerifyExpress = rootRequire('./index');
 
 function success(req, res){
     return res.send("Success");
 }
 
-function getSession(req, res, next) {
-        if(!req.headers.authorization){
-            return res.status(401).send("Missing authorization header");
-        }
-
-        var accessToken = req.headers.authorization.split(/\s+/).pop();
-
-        //verify the access-token
-        return authmakerVerify.mongo(accessToken)
-            .then(function(oauthSession){
-                req.oauthSession = oauthSession;
-
-                next();
-            })
-            .then(null, function(err){
-
-                if (err.message.indexOf("Not Authorized") >= 0) {
-                    res.status(401);
-                } else {
-                    res.status(500);
-                }
-
-                return res.send(err.message);
-            });
-    }
-
-
 module.exports.autoroute = {
     get: {
         '/noverify': success,
-        '/verify': [getSession, success],
-        '/jointrated': [authmakerVerify.mongoRateLimited],
-        '/splitrated': [authmakerVerify.mongo, authmakerVerify.rateLimited]
+        '/verify': [authmakerVerifyExpress.mongo(), success],
+        '/scope': [authmakerVerifyExpress.mongo("face_permissions"), success],
+        '/jointrated': [authmakerVerifyExpress.mongoRateLimited("face"), success],
+        '/defaultScope': [authmakerVerifyExpress.mongoRateLimitedDefault("face", "face_limit_10_minutes"), success],
+        // '/splitrated': [authmakerVerifyExpress.mongo, authmakerVerifyExpress.rateLimited, success]
     }
 };

@@ -1,83 +1,115 @@
-var moment = require('moment');
+var authmakerVerify = require('authmaker-verify');
+var winston = require('winston');
 
-var db = require('./db');
-var models = require('./db/models');
+//remove it so to add it with my settings
+try{winston.remove(winston.transports.Console);}catch(e){//do nothing
+}
 
-var mongoVerify = require('./lib/mongo/verify');
-var checkAccessToken = require('./lib/common/checkAccessToken');
-
-var _ = require('lodash');
-var moment = require('moment');
-
-global.rootRequire = function(fileName) {
-    return require(__dirname + '/' + fileName);
+var winstonOptions = {
+    colorize: true,
+    timestamp: true,
+    handleExceptions: true,
+    prettyPrint: true
 };
 
-module.exports = {
-    mongoRateLimited: function(access_token, tag, defaultScope) {
-        if(!tag) {
-            throw new Error("Incorrect parameter: Missing tag in arguments passed");
+if(process.env.LOG_LEVEL){
+    winstonOptions.level = process.env.LOG_LEVEL;
+} else if(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'){
+    winstonOptions.level = "debug";
+} else {
+    winstonOptions.level = "info";
+}
+
+if(!process.env.NO_LOG) {
+    winston.add(winston.transports.Console, winstonOptions);
+}
+
+function generateRateLimit(tag, defaultScope){
+    return function(req, res, next){
+    if (!req.headers.authorization) {
+        return res.status(401).send("No Access token provided");
+    }
+
+    //take the accessToken as the last delimited entry in authorization
+    var accessToken = req.headers.authorization.split(/\s+/).pop();
+
+    //verify the access-token
+    return authmakerVerify.mongoRateLimited(accessToken, tag, defaultScope)
+        .then(function(oauthSession) {
+            req.oauthSession = oauthSession;
+
+            next();
+        })
+        .then(null, function(err) {
+            winston.error("Error while authorizing session", {
+                error: err.message,
+                stask: err.stack,
+                authorisation: req.headers.authorization
+            });
+
+            if (err.message.indexOf("Not Authorized") >= 0) {
+                res.status(401);
+            } else if (err.message.indexOf("Too Many Requests") >= 0) {
+                res.status(429);
+                return res.send("Too Many Requests: Rate limit exceeded.");
+            } else {
+                res.status(500);
+            }
+
+            return res.send(err.message);
+        });
+    };
+}
+
+function generateVerify(tag){
+    return function(req, res, next){
+        if (!req.headers.authorization) {
+            return res.status(401).send("No Access token provided");
         }
 
-        return checkAccessToken(access_token)
-        .then(function(session){
-            var scope = _.find(session.scopes, function(scope) {
-                if(scope === tag) {
-                    throw new Error("Incorrect parameter: Only tag name required to be passed from " + scope);
-                }
-                return scope.startsWith(tag);
-            });
+        //take the accessToken as the last delimited entry in authorization
+        var accessToken = req.headers.authorization.split(/\s+/).pop();
 
-            if(!scope && defaultScope){
-                scope = defaultScope;
-            }
+        //verify the access-token
+        return authmakerVerify.mongo(accessToken, tag)
+            .then(function(oauthSession) {
+                req.oauthSession = oauthSession;
 
-            if (!scope) {
-                throw new Error("Not Authorized: No Scope associated with " + tag);
-            }
-
-            var scopeParts = scope.split('_');
-
-            if(scopeParts.length !== 4) {
-                throw new Error("Malformed Scope: " + scope + " is not a rate limited scope. e.g. tagname_limit_10_day");
-            }
-
-            var limit = scopeParts[2].trim();
-            var period = scopeParts[3].trim();
-
-            return models.auditTrail.find({
-                tag: tag,
-                date: {
-                    $gte: moment().subtract(1, period)
-                }
-            }).count().exec().then(function(count) {
-                if (count >= limit) {
-                    throw new Error("Too Many Requests: Rate limit exceeded for " + scope);
-                }
-
-                return models.auditTrail.create({
-                    access_token: access_token,
-                    tag: tag,
-                    userId: session.userId,
-                    date: new Date()
-                }).then(function() {
-                    return session;
+                next();
+            })
+            .then(null, function(err) {
+                winston.error("Error while authorizing session", {
+                    error: err.message,
+                    stask: err.stack,
+                    authorisation: req.headers.authorization
                 });
+
+                if (err.message.indexOf("Not Authorized") >= 0) {
+                    res.status(401);
+                } else {
+                    res.status(500);
+                }
+
+                return res.send(err.message);
             });
-        });
+    };
+}
+
+module.exports = {
+    mongoRateLimited: function(tag) {
+        return generateRateLimit(tag);
     },
-    mongo: mongoVerify,
+
+    mongoRateLimitedDefault: function(tag, defaultScope){
+        return generateRateLimit(tag, defaultScope);
+    },
+
+    mongo: function(tag) {
+        return generateVerify(tag);
+    },
+
     connectMongo: function(nconf) {
         //initialise the db
-        db(nconf);
+        authmakerVerify.connectMongo(nconf);
     },
-
-    rateLimited: function(){
-        //TODO split this out into a non mongo file when we have one
-    }
 };
-
-if(process.env.NODE_ENV === "test"){
-    module.exports.models = models;
-    module.exports.mongoose = require('mongoose');
-}

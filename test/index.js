@@ -3,7 +3,8 @@ var nconf = require('nconf');
 
 var express = require('express');
 
-var db = rootRequire('./db');
+var authmakerVerify = require('authmaker-verify');
+var authmakerCommon = require('authmaker-common');
 
 var httpServer;
 
@@ -21,7 +22,8 @@ before(function() {
     global.app = express();
     //create http server
     httpServer = http.createServer(global.app).listen(56773);
-    db(nconf);
+    authmakerVerify.connectMongo(nconf);
+    authmakerCommon.init(nconf);
 });
 
 after(function(done) {
