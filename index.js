@@ -96,11 +96,12 @@ function generateVerify(tag){
 }
 
 module.exports = {
-    mongoRateLimited: function(tag) {
-        return generateRateLimit(tag);
+    mongoRateLimited: function(tag, defaultScope) {
+        return generateRateLimit(tag, defaultScope);
     },
 
     mongoRateLimitedDefault: function(tag, defaultScope){
+        console.warn("This function is deprecated, just use mongoRateLimited(tag, defaultScope) instead");
         return generateRateLimit(tag, defaultScope);
     },
 
