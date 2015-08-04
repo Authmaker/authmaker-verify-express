@@ -113,4 +113,12 @@ module.exports = {
         //initialise the db
         authmakerVerify.connectMongo(nconf);
     },
+
+    authmakerVerify: authmakerVerify
 };
+
+//pass on models and mongoose for tests
+if(process.env.NODE_ENV === "test"){
+    module.exports.models = authmakerVerify.models;
+    module.exports.mongoose = authmakerVerify.mongoose;
+}
