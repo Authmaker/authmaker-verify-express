@@ -10,7 +10,7 @@ var httpServer;
 nconf.defaults({
     "mongo": {
         "authmaker": {
-            "db": "authmaker-verify-test",
+            "db": "authmaker-verify-express-test",
             "host": "localhost",
             "port": 27017
         }

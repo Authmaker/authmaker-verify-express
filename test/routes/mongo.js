@@ -29,7 +29,7 @@ function promiseRequest(params) {
 function manyRequests(params, number, done) {
     var promises = [];
 
-    for(var i = 0; i < 5; i++ ){
+    for(var i = 0; i < number; i++ ){
         promises.push(promiseRequest(params));
     }
 
