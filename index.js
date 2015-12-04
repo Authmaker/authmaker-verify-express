@@ -84,7 +84,7 @@ function generateVerify(tag, options){
                     authorisation: req.headers.authorization
                 });
 
-                if (options.passError) {
+                if (options && options.passError) {
                     return next(err);
                 }
 
