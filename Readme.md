@@ -83,8 +83,10 @@ mongoRateLimitedDefault: function(tag, defaultScope)
 
 #### mongo - function - returns middleware
 ```
-mongo: function(tag)
+mongo: function(tag, options)
 ```
+
+options.passError (optional) if true passes error via middleware
 
 #### connectMongo - function
 ```

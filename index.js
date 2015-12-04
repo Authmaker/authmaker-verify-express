@@ -61,7 +61,7 @@ function generateRateLimit(tag, defaultScope){
     };
 }
 
-function generateVerify(tag){
+function generateVerify(tag, options){
     return function(req, res, next){
         if (!req.headers.authorization) {
             return res.status(401).send("No Access token provided");
@@ -83,6 +83,10 @@ function generateVerify(tag){
                     stask: err.stack,
                     authorisation: req.headers.authorization
                 });
+
+                if (options.passError) {
+                    return next(err);
+                }
 
                 if (err.message.indexOf("Not Authorized") >= 0) {
                     res.status(401);
