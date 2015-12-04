@@ -109,8 +109,8 @@ module.exports = {
         return generateRateLimit(tag, defaultScope);
     },
 
-    mongo: function(tag) {
-        return generateVerify(tag);
+    mongo: function(tag, options) {
+        return generateVerify(tag, options);
     },
 
     connectMongo: function(nconf) {
