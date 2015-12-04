@@ -1,4 +1,10 @@
 
+1.2.1 / 2015-12-04
+==================
+
+  * added missing options param in mongo export
+  * Merge pull request #3 from Authmaker/release/1.2.0
+
 1.2.0 / 2015-12-04
 ==================
 
