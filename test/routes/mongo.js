@@ -194,7 +194,7 @@ describe("mongo verify functions", function() {
                 access_token: 'valid_rate_limit_5_days'
             }, 5, function(err){
                 if(err){
-                    done(err);
+                    return done(err);
                 }
                 request(global.app)
                     .get('/jointrated')
@@ -215,7 +215,7 @@ describe("mongo verify functions", function() {
                 access_token: 'valid_rate_limit_5_second'
             }, 5, function(err){
                 if(err){
-                    done(err);
+                    return done(err);
                 }
                 setTimeout(function(){
                     manyRequests({
@@ -225,13 +225,14 @@ describe("mongo verify functions", function() {
                 }, 1000);
             });
         });
+
         it("should fail with 11 requests for a scope that ends with _limit_5_seconds where there is a 1 second gap after the first 5 requests",  function(done){
             manyRequests({
                 route: '/jointrated',
                 access_token: 'valid_rate_limit_5_second'
             }, 5, function(err){
                 if(err){
-                    done(err);
+                    return done(err);
                 }
                 setTimeout(function(){
                     manyRequests({
@@ -239,7 +240,7 @@ describe("mongo verify functions", function() {
                         access_token: 'valid_rate_limit_5_second'
                     }, 5, function(err){
                         if(err){
-                            done(err);
+                            return done(err);
                         }
                         request(global.app)
                             .get('/jointrated')
@@ -260,7 +261,7 @@ describe("mongo verify functions", function() {
                 access_token: 'valid_rate_limit_5_days'
             }, 5, function(err){
                 if(err){
-                    done(err);
+                    return done(err);
                 }
                 manyRequests({
                     route: '/jointrated',
