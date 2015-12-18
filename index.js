@@ -38,6 +38,15 @@ function generateRateLimit(tag, defaultScope){
         .then(function(oauthSession) {
             req.oauthSession = oauthSession;
 
+            //add the user to the req.user
+            return authmakerVerify.getModel('user').then(function(model){
+                return model.findOne({_id: oauthSession.userId}).exec().then(function(user){
+                    req.user = user;
+
+                });
+            });
+        })
+        .then(function(){
             next();
         })
         .then(null, function(err) {
@@ -75,6 +84,15 @@ function generateVerify(tag, options){
             .then(function(oauthSession) {
                 req.oauthSession = oauthSession;
 
+                //add the user to the req.user
+                return authmakerVerify.getModel('user').then(function(model){
+                    return model.findOne({_id: oauthSession.userId}).exec().then(function(user){
+                        req.user = user;
+
+                    });
+                });
+            })
+            .then(function(){
                 next();
             })
             .then(null, function(err) {
