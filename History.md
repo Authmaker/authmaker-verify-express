@@ -1,4 +1,10 @@
 
+2.1.0 / 2015-12-18
+==================
+
+  * Merge pull request #6 from Authmaker/feature/addUserReq
+  * adding req.user
+
 2.0.0 / 2015-12-18
 ==================
 

@@ -2,6 +2,7 @@
   "name": "authmaker-verify-express",
   "version": "2.0.0",
   "description": "Express middlewares for authmaker-verify",
+  "repository": "https://github.com/Authmaker/authmaker-verify-express",
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha --recursive --reporter spec",
