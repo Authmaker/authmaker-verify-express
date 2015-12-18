@@ -1,4 +1,10 @@
 
+2.0.0 / 2015-12-18
+==================
+
+  * Merge pull request #5 from Authmaker/feature/updateAuthmakerVerify
+  * upgrading Authmaker Verify and fixing tests
+
 1.2.1 / 2015-12-04
 ==================
 
