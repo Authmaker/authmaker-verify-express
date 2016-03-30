@@ -1,33 +1,36 @@
 var authmakerVerify = require('authmaker-verify');
 var winston = require('winston');
+var Q = require('q');
 
 //remove it so to add it with my settings
-try{winston.remove(winston.transports.Console);}catch(e){//do nothing
+try {
+  winston.remove(winston.transports.Console);
+} catch (e) { //do nothing
 }
 
 var winstonOptions = {
-    colorize: true,
-    timestamp: true,
-    handleExceptions: true,
-    prettyPrint: true
+  colorize: true,
+  timestamp: true,
+  handleExceptions: true,
+  prettyPrint: true,
 };
 
-if(process.env.LOG_LEVEL){
-    winstonOptions.level = process.env.LOG_LEVEL;
-} else if(process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'){
-    winstonOptions.level = "debug";
+if (process.env.LOG_LEVEL) {
+  winstonOptions.level = process.env.LOG_LEVEL;
+} else if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+  winstonOptions.level = 'debug';
 } else {
-    winstonOptions.level = "info";
+  winstonOptions.level = 'info';
 }
 
-if(!process.env.NO_LOG) {
-    winston.add(winston.transports.Console, winstonOptions);
+if (!process.env.NO_LOG) {
+  winston.add(winston.transports.Console, winstonOptions);
 }
 
-function generateRateLimit(tag, defaultScope){
-    return function(req, res, next){
+function generateRateLimit(tag, defaultScope) {
+  return function(req, res, next) {
     if (!req.headers.authorization) {
-        return res.status(401).send("No Access token provided");
+      return res.status(401).send('No Access token provided');
     }
 
     //take the accessToken as the last delimited entry in authorization
@@ -35,106 +38,140 @@ function generateRateLimit(tag, defaultScope){
 
     //verify the access-token
     return authmakerVerify.mongoRateLimited(accessToken, tag, defaultScope)
-        .then(function(oauthSession) {
-            req.oauthSession = oauthSession;
 
-            //add the user to the req.user
-            return authmakerVerify.getModel('user').then(function(model){
-                return model.findOne({_id: oauthSession.userId}).exec().then(function(user){
-                    req.user = user;
+    .then(function(oauthSession) {
+      req.oauthSession = oauthSession;
 
-                });
-            });
-        })
-        .then(function(){
-            next();
-        })
-        .then(null, function(err) {
-            winston.error("Error while authorizing session", {
-                error: err.message,
-                stask: err.stack,
-                authorisation: req.headers.authorization
-            });
+      //add the user to the req.user
+      return authmakerVerify.getModel('user').then(function(model) {
+        return model.findOne({
+          _id: oauthSession.userId,
+        }).exec().then(function(user) {
+          req.user = user;
 
-            if (err.message.indexOf("Not Authorized") >= 0) {
-                res.status(401);
-            } else if (err.message.indexOf("Too Many Requests") >= 0) {
-                res.status(429);
-                return res.send("Too Many Requests: Rate limit exceeded.");
-            } else {
-                res.status(500);
-            }
-
-            return res.send(err.message);
         });
-    };
+      });
+    })
+
+    .then(function() {
+      next();
+    })
+
+    .then(null, function(err) {
+      winston.error('Error while authorizing session', {
+        error: err.message,
+        stask: err.stack,
+        authorisation: req.headers.authorization,
+      });
+
+      if (err.message.indexOf('Not Authorized') >= 0) {
+        res.status(401);
+      } else if (err.message.indexOf('Too Many Requests') >= 0) {
+        res.status(429);
+        return res.send('Too Many Requests: Rate limit exceeded.');
+      } else {
+        res.status(500);
+      }
+
+      return res.send(err.message);
+    });
+  };
 }
 
-function generateVerify(tag, options){
-    return function(req, res, next){
-        if (!req.headers.authorization) {
-            return res.status(401).send("No Access token provided");
-        }
+function generateVerify(tag, options) {
+  return function(req, res, next) {
+    //verify the access-token
+    return Q.fcall(function() {
 
-        //take the accessToken as the last delimited entry in authorization
-        var accessToken = req.headers.authorization.split(/\s+/).pop();
+      if (!req.headers.authorization) {
+        throw new Error('Not Authorized: No Access token provided');
+      }
 
-        //verify the access-token
-        return authmakerVerify.mongo(accessToken, tag)
-            .then(function(oauthSession) {
-                req.oauthSession = oauthSession;
+      //take the accessToken as the last delimited entry in authorization
+      var accessToken = req.headers.authorization.split(/\s+/).pop();
 
-                //add the user to the req.user
-                return authmakerVerify.getModel('user').then(function(model){
-                    return model.findOne({_id: oauthSession.userId}).exec().then(function(user){
-                        req.user = user;
+      return authmakerVerify.mongo(accessToken, tag);
+    })
 
-                    });
-                });
-            })
-            .then(function(){
-                next();
-            })
-            .then(null, function(err) {
-                winston.error("Error while authorizing session", {
-                    error: err.message,
-                    stask: err.stack,
-                    authorisation: req.headers.authorization
-                });
+    .then(function(oauthSession) {
+      req.oauthSession = oauthSession;
 
-                if (options && options.passError) {
-                    return next(err);
-                }
+      //add the user to the req.user
+      return authmakerVerify.getModel('user').then(function(model) {
+        return model.findOne({
+          _id: oauthSession.userId,
+        }).exec().then(function(user) {
+          req.user = user;
+        });
+      });
+    })
 
-                if (err.message.indexOf("Not Authorized") >= 0) {
-                    res.status(401);
-                } else {
-                    res.status(500);
-                }
+    .then(function() {
+      next();
+    })
 
-                return res.send(err.message);
-            });
-    };
+    .then(null, function(err) {
+      winston.error('Error while authorizing session', {
+        error: err.message,
+        stask: err.stack,
+        authorisation: req.headers.authorization,
+      });
+
+      if (options && options.passError) {
+        return next(err);
+      }
+
+      if (err.message.indexOf('Not Authorized') >= 0) {
+        res.status(401);
+      } else {
+        res.status(500);
+      }
+
+      return res.send(err.message);
+    });
+  };
+}
+
+function externalIdentities(req, res, next) {
+  if (!req.user) {
+    return next('req.user not defined - must use mongo(), mongoRateLimited() or mongoRateLimitedDefault() before this middleware');
+  }
+
+  return authmakerVerify.getModel('externalIdentity').then(function(model) {
+    return model.find({
+      _id: req.user.externalIdentities,
+    }).exec().then(function(externalIdentities) {
+      req.externalIdentities = externalIdentities;
+
+      next();
+    });
+  })
+
+  .then(null, function(err) {
+    next(err);
+  });
 }
 
 module.exports = {
-    mongoRateLimited: function(tag, defaultScope) {
-        return generateRateLimit(tag, defaultScope);
-    },
+  mongoRateLimited: function(tag, defaultScope) {
+    return generateRateLimit(tag, defaultScope);
+  },
 
-    mongoRateLimitedDefault: function(tag, defaultScope){
-        console.warn("This function is deprecated, just use mongoRateLimited(tag, defaultScope) instead");
-        return generateRateLimit(tag, defaultScope);
-    },
+  mongoRateLimitedDefault: function(tag, defaultScope) {
+    console.warn('This function is deprecated, just use mongoRateLimited(tag, defaultScope) instead');
+    return generateRateLimit(tag, defaultScope);
+  },
 
-    mongo: function(tag, options) {
-        return generateVerify(tag, options);
-    },
+  mongo: function(tag, options) {
+    return generateVerify(tag, options);
+  },
 
-    connectMongo: function(nconf) {
-        //initialise the db
-        authmakerVerify.connectMongo(nconf);
-    },
+  externalIdentities: externalIdentities,
 
-    authmakerVerify: authmakerVerify
+  connectMongo: function(nconf) {
+    //initialise the db
+    authmakerVerify.connectMongo(nconf);
+  },
+
+  authmakerVerify: authmakerVerify,
 };
