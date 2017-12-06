@@ -6,12 +6,13 @@
   "main": "index.js",
   "scripts": {
     "test": "NODE_ENV=test mocha --recursive --reporter spec",
-    "test-watch": "NO_LOG=please npm run test -- -w --reporter min"
+    "test-watch": "NO_LOG=please npm run test -- -w --reporter min",
+    "coverage": "NO_LOG=please NODE_ENV=test istanbul cover _mocha -- -R spec --recursive"
   },
   "author": "Chris Manson <chris@bloo.ie>",
   "license": "MIT",
   "dependencies": {
-    "authmaker-verify": "^2.0.1",
+    "authmaker-verify": "^3.0.0",
     "lodash": "^3.9.3",
     "moment": "^2.10.3",
     "mongoose": "^4.0.1",
@@ -25,7 +26,8 @@
     "eslint-plugin-import": "^2.8.0",
     "express": "^4.13.0",
     "express-autoroute": "^1.2.1",
-    "mocha": "^2.2.5",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.0.2",
     "nconf": "^0.7.1",
     "supertest": "^1.0.1"
   }
