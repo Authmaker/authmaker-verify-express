@@ -9,7 +9,7 @@
     "test-watch": "NO_LOG=please npm run test -- -w --reporter min",
     "coverage": "NO_LOG=please NODE_ENV=test istanbul cover _mocha -- -R spec --recursive"
   },
-  "author": "Chris Manson <chris@bloo.ie>",
+  "author": "Chris Manson <chris@stonecircle.io>",
   "license": "MIT",
   "dependencies": {
     "authmaker-verify": "^3.0.0",
