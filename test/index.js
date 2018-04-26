@@ -21,7 +21,7 @@ before(() => {
   global.app = express();
   // create http server
   httpServer = http.createServer(global.app).listen(56773);
-  authmakerVerify.init(nconf);
+  return authmakerVerify.init(nconf);
 });
 
 after((done) => {
