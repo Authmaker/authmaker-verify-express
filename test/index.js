@@ -1,5 +1,6 @@
 const http = require('http');
 const nconf = require('nconf');
+const verify = require('authmaker-verify');
 
 const express = require('express');
 
@@ -24,6 +25,7 @@ before(() => {
   return authmakerVerify.init(nconf);
 });
 
-after((done) => {
-  httpServer.close(done);
+after(() => {
+  httpServer.close();
+  return verify.getConnection().then(connection => connection.close());
 });
