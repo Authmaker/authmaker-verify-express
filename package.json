@@ -1,6 +1,6 @@
 {
   "name": "authmaker-verify-express",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Express middlewares for authmaker-verify",
   "repository": "https://github.com/Authmaker/authmaker-verify-express",
   "main": "index.js",
