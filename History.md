@@ -1,9 +1,14 @@
 
+3.0.1 / 2019-06-13
+==================
+
+  * bumping dependencies
+
 2.2.0 / 2016-03-31
 ==================
 
   * Merge pull request #7 from Authmaker/feature/addingExternalIdentities
-  * adding external identities 
+  * adding external identities
   * fixing passerror
   * updating to our new coding standards
 
