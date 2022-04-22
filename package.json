@@ -29,7 +29,7 @@
     "express-autoroute": "^2.1.1",
     "istanbul": "^0.4.5",
     "mocha": "^6.1.4",
-    "nconf": "^0.7.1",
+    "nconf": "^0.11.4",
     "supertest": "^4.0.2"
   }
 }
